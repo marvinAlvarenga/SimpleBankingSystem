@@ -69,3 +69,89 @@ class RandomCreditCardFactory(BaseCreditCardFactory):
             number=self.card_number_generator.generate(),
             pin=self.pin_number_generator.generate(),
         )
+
+
+# Menú
+class BaseMenu:
+    def next(self):
+        raise NotImplementedError
+
+
+class MainMenu(BaseMenu):
+    def next(self):
+        print('1. Create an account')
+        print('2. Log into account')
+        print('0. Exit')
+        option = input()
+
+        if option == '1':
+            return CreateAccountMenu()
+        elif option == '2':
+            return LogIntoAccountMenu()
+
+        return None
+
+
+class CreateAccountMenu(BaseMenu):
+    def next(self):
+        credit_card = RandomCreditCardFactory().generate_new_credit_card()
+        credit_card.save()
+        print('Your card has been created')
+        print('Your card number:')
+        print(credit_card.number)
+        print('Your card PIN:')
+        print(credit_card.pin)
+        return MainMenu()
+
+
+class LogIntoAccountMenu(BaseMenu):
+    def next(self):
+        print('Enter your card number:')
+        card_number = input()
+        print('Enter your PIN:')
+        card_pin = input()
+        card = CreditCard.get_by_card_number(card_number)
+
+        if card and card.pin == card_pin:
+            set_logged_in_account(card)
+            print('You have successfully logged in!')
+            return UserLoggedInMenu()
+
+        print('Wrong card number or PIN!')
+        return MainMenu()
+
+
+class UserLoggedInMenu(BaseMenu):
+    def next(self):
+        print('1. Balance')
+        print('2. Log out')
+        print('0. Exit')
+        option = input()
+
+        if option == '0':
+            return None
+        elif option == '1':
+            return BalanceMenu()
+        elif option == '2':
+            set_logged_in_account(None)
+            print('You have successfully logged out!')
+            return MainMenu()
+
+        return None
+
+
+class BalanceMenu(BaseMenu):
+    def next(self):
+        card = get_logged_in_account()
+        print(f'Balance: {card.balance}')
+        return UserLoggedInMenu()
+
+
+# Entry point
+class ContextMenu:
+    current_menu = MainMenu()
+
+    def execute(self):
+        next_menu = self.current_menu.next()
+        self.current_menu = next_menu
+        return next_menu
