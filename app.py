@@ -13,3 +13,20 @@ class DictionaryStorageHandler(BaseStorageHandler):
 
     def get_by_card_number(self, card_number):
         return self.storage.get(card_number, None)
+
+
+class CreditCard:
+
+    storage_handler = DictionaryStorageHandler()
+
+    def __init__(self, number, pin):
+        self.number = number
+        self.pin = pin
+        self.balance = 0
+
+    @classmethod
+    def get_by_card_number(cls, card_number):
+        return cls.storage_handler.get_by_card_number(card_number)
+
+    def save(self):
+        return self.storage_handler.save(self)
