@@ -49,3 +49,23 @@ class RandomCardNumberGenerator(BaseGenerator):
         account_identifier = random.randint(0, 999999999)
         checksum = random.randint(0, 9)
         return f'{get_bank_identifier()}{account_identifier:09}{checksum}'
+
+
+# Factories
+class BaseCreditCardFactory:
+    card_number_generator = None
+    pin_number_generator = None
+
+    def generate_new_credit_card(self):
+        raise NotImplementedError
+
+
+class RandomCreditCardFactory(BaseCreditCardFactory):
+    card_number_generator = RandomCardNumberGenerator()
+    pin_number_generator = PINGenerator()
+
+    def generate_new_credit_card(self) -> CreditCard:
+        return CreditCard(
+            number=self.card_number_generator.generate(),
+            pin=self.pin_number_generator.generate(),
+        )
