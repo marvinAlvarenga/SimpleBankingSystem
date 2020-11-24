@@ -1,3 +1,22 @@
+import random
+
+BANK_IDENTIFIER = '400000'
+
+def get_bank_identifier():
+    return BANK_IDENTIFIER
+
+
+LOGGED_IN_ACCOUNT = None
+
+def get_logged_in_account():
+    return LOGGED_IN_ACCOUNT
+
+
+def set_logged_in_account(card):
+    global LOGGED_IN_ACCOUNT
+    LOGGED_IN_ACCOUNT = card
+
+
 # Models and storage
 class BaseStorageHandler:
     def save(self):
@@ -155,3 +174,17 @@ class ContextMenu:
         next_menu = self.current_menu.next()
         self.current_menu = next_menu
         return next_menu
+
+
+def run():
+    entry_point = ContextMenu()
+    while True:
+        next_ = entry_point.execute()
+        if not next_:
+            break
+
+    print('Bye!')
+
+
+if __name__ == "__main__":
+    run()
