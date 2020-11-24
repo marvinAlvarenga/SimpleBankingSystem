@@ -30,3 +30,22 @@ class CreditCard:
 
     def save(self):
         return self.storage_handler.save(self)
+
+
+# Generators
+class BaseGenerator:
+    def generate(self):
+        raise NotImplementedError
+
+
+class PINGenerator(BaseGenerator):
+    def generate(self):
+        pin = random.randint(0, 9999)
+        return f'{pin:04}'
+
+
+class RandomCardNumberGenerator(BaseGenerator):
+    def generate(self):
+        account_identifier = random.randint(0, 999999999)
+        checksum = random.randint(0, 9)
+        return f'{get_bank_identifier()}{account_identifier:09}{checksum}'
