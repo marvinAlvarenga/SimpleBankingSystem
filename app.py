@@ -17,7 +17,7 @@ def set_logged_in_account(card):
     LOGGED_IN_ACCOUNT = card
 
 
-# Models and storage
+# Storages
 class BaseStorageHandler:
     def save(self):
         raise NotImplementedError
@@ -32,23 +32,6 @@ class DictionaryStorageHandler(BaseStorageHandler):
 
     def get_by_card_number(self, card_number):
         return self.storage.get(card_number, None)
-
-
-class CreditCard:
-
-    storage_handler = DictionaryStorageHandler()
-
-    def __init__(self, number, pin):
-        self.number = number
-        self.pin = pin
-        self.balance = 0
-
-    @classmethod
-    def get_by_card_number(cls, card_number):
-        return cls.storage_handler.get_by_card_number(card_number)
-
-    def save(self):
-        return self.storage_handler.save(self)
 
 
 # Generators
@@ -95,7 +78,7 @@ class BaseCreditCardFactory:
     card_number_generator = None
     pin_number_generator = None
 
-    def generate_new_credit_card(self) -> CreditCard:
+    def generate_new_credit_card(self):
         return CreditCard(
             number=self.card_number_generator.generate(),
             pin=self.pin_number_generator.generate(),
@@ -110,6 +93,31 @@ class RandomCreditCardFactory(BaseCreditCardFactory):
 class LuhnAlgorithmCreditCardFactory(BaseCreditCardFactory):
     card_number_generator = LuhnAlgorithmCardNumberGenerator()
     pin_number_generator = PINGenerator()
+
+
+# Entities
+class CreditCard:
+
+    storage_handler = DictionaryStorageHandler()
+    generator_factory = LuhnAlgorithmCreditCardFactory()
+
+    def __init__(self, number, pin):
+        self.number = number
+        self.pin = pin
+        self.balance = 0
+
+    @classmethod
+    def get_by_card_number(cls, card_number):
+        return cls.storage_handler.get_by_card_number(card_number)
+
+    @classmethod
+    def generate_one(cls):
+        new_credid_card = cls.generator_factory.generate_new_credit_card()
+        new_credid_card.save()
+        return new_credid_card
+
+    def save(self):
+        return self.storage_handler.save(self)
 
 
 # Menú
@@ -135,7 +143,7 @@ class MainMenu(BaseMenu):
 
 class CreateAccountMenu(BaseMenu):
     def next(self):
-        credit_card = LuhnAlgorithmCreditCardFactory().generate_new_credit_card()
+        credit_card = CreditCard.generate_one()
         credit_card.save()
         print('Your card has been created')
         print('Your card number:')
