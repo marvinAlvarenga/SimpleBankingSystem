@@ -70,24 +70,46 @@ class RandomCardNumberGenerator(BaseGenerator):
         return f'{get_bank_identifier()}{account_identifier:09}{checksum}'
 
 
+class LuhnAlgorithmCardNumberGenerator(BaseGenerator):
+    def generate(self):
+        random_identifier = f'{get_bank_identifier()}{random.randint(0, 999999999):09}'
+        digits = [int(digit) for digit in random_identifier]
+
+        for i in range(len(digits)):
+            if (i+1) % 2 != 0:
+                digits[i] *= 2
+
+            if digits[i] > 9:
+                digits[i] -= 9
+
+        x = sum(digits)
+
+        rest = x % 10
+        checksum = 0 if rest == 0 else 10 - rest
+
+        return random_identifier + str(checksum)
+
+
 # Factories
 class BaseCreditCardFactory:
     card_number_generator = None
     pin_number_generator = None
-
-    def generate_new_credit_card(self):
-        raise NotImplementedError
-
-
-class RandomCreditCardFactory(BaseCreditCardFactory):
-    card_number_generator = RandomCardNumberGenerator()
-    pin_number_generator = PINGenerator()
 
     def generate_new_credit_card(self) -> CreditCard:
         return CreditCard(
             number=self.card_number_generator.generate(),
             pin=self.pin_number_generator.generate(),
         )
+
+
+class RandomCreditCardFactory(BaseCreditCardFactory):
+    card_number_generator = RandomCardNumberGenerator()
+    pin_number_generator = PINGenerator()
+
+
+class LuhnAlgorithmCreditCardFactory(BaseCreditCardFactory):
+    card_number_generator = LuhnAlgorithmCardNumberGenerator()
+    pin_number_generator = PINGenerator()
 
 
 # Menú
@@ -113,7 +135,7 @@ class MainMenu(BaseMenu):
 
 class CreateAccountMenu(BaseMenu):
     def next(self):
-        credit_card = RandomCreditCardFactory().generate_new_credit_card()
+        credit_card = LuhnAlgorithmCreditCardFactory().generate_new_credit_card()
         credit_card.save()
         print('Your card has been created')
         print('Your card number:')
