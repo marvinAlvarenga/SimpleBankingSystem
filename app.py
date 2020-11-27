@@ -1,4 +1,6 @@
 import random
+import sqlite3
+
 
 BANK_IDENTIFIER = '400000'
 
@@ -19,7 +21,10 @@ def set_logged_in_account(card):
 
 # Storages
 class BaseStorageHandler:
-    def save(self):
+    def save(self, credit_card):
+        raise NotImplementedError
+
+    def get_by_card_number(self, credit_card):
         raise NotImplementedError
 
 
@@ -34,15 +39,46 @@ class DictionaryStorageHandler(BaseStorageHandler):
         return self.storage.get(card_number, None)
 
 
+class SQLiteStorageHandler(BaseStorageHandler):
+    def __init__(self):
+        self.connection = sqlite3.connect('card.s3db')
+        self.cursor = self.connection.cursor()
+        query = """
+        CREATE TABLE IF NOT EXISTS card(
+            id      INTEGER,
+            number  TEXT,
+            pin     TEXT,
+            balance INTEGER DEFAULT 0
+        );
+        """
+        self.cursor.execute(query)
+        self.connection.commit()
+
+    def save(self, credit_card):
+        query = (f'INSERT INTO card'
+                 f' VALUES ({credit_card.id}, "{credit_card.number}", "{credit_card.pin}", {credit_card.balance});')
+
+        self.cursor.execute(query)
+        self.connection.commit()
+
+    def get_by_card_number(self, card_number):
+        query = f'SELECT * FROM card WHERE number="{card_number}";'
+        self.cursor.execute(query)
+        row = self.cursor.fetchone()
+
+        return CreditCard(*row) if row else None
+
+
 # Entities
 class CreditCard:
 
-    storage_handler = DictionaryStorageHandler()
+    storage_handler = SQLiteStorageHandler()
 
-    def __init__(self, number, pin):
+    def __init__(self, id, number, pin, balance=0):
+        self.id = id
         self.number = number
         self.pin = pin
-        self.balance = 0
+        self.balance = balance
 
     @classmethod
     def get_by_card_number(cls, card_number):
@@ -98,6 +134,7 @@ class BaseCreditCardFactory:
 
     def generate_new_credit_card(self):
         return CreditCard(
+            id=1,
             number=self.card_number_generator.generate(),
             pin=self.pin_number_generator.generate(),
         )
