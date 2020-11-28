@@ -1,4 +1,8 @@
-# Description
+# Bank system description
+
+This project is a solution to an exercise which appeared in [JetBrains Academy](https://www.jetbrains.com/academy/)
+
+## How credit card numbers work
 
 We live busy lives these days. Between work, chores, and other things in our to-do lists, it can be tough to catch your breath and stay calm. Credit cards are one of the things that save us time, energy, and nerves. From not having to carry a wallet full of cash to consumer protection, cards make our lives easier in many ways. In this project, you will develop a simple banking system with a database.
 
@@ -37,82 +41,45 @@ In our banking system, the customer account number can be any, but it should be 
 
 The very last digit of a credit card is the **check digit** or **checksum**. It is used to validate the credit card number using the Luhn algorithm, which we will explain in the next stage of this project. For now, the checksum can be any digit you like.
 
-## Instruction
+## Strategies to generate credit card numbers
 
-It allows customers to create a new account in our banking system.
+In this project, we try to show two ways to do it.
 
-Once the program starts, you will see the menu:
+1. The easiest one is generating a random number
+2. Apply any algorithm like LuhnAlgorithm
 
-```terminal
-1. Create an account
-2. Log into account
-0. Exit
+## Tecnical
+
+This code is inspired by SOLID principles.
+
+The purpose of this project is try to show:
+
+- A flexible way to handle menus. NOT huge if-else statements
+- Be able to manage different storages without coupling
+- Apply composition concept
+- Apply builder, abstract method, strategy, state, facade patterns
+
+Note: **THERE IS NOT FULL ERROR HANDLING**
+
+## Extra instructions
+
+In order to run the program, please type the following command on a terminal
+
+```console
+python run.py
 ```
 
-If the customer chooses ‘Create an account’, a new card number is generated which will satisfy all the conditions described above. Then a PIN code that belongs to the generated card number will be generated. A PIN code is a sequence of any 4 digits. PIN should be generated in a range from 0000 to 9999.
 
-If the customer chooses ‘Log into account’, you will be asked to enter your card information. The program should store all generated data until it is terminated so that a user is able to log into any of the created accounts by a card number and its pin. You can use an array to store the information.
 
-After all information is entered correctly, users may enter to check the account balance; right after creating the account, the balance should be 0. It should also be possible to log out of the account and exit the program.
+### Features
 
-## Example
+- Generate new credid cards and their pin
+- Show and modify the balance of the account
+- Destroy an account
+- Transfer money between accounts
+- Some extras.
 
-The symbol `>` represents the user input. Notice that it's not a part of the input.
 
-```terminal
-1. Create an account
-2. Log into account
-0. Exit
->1
+Please, feel free to send me any feedback.
 
-Your card has been created
-Your card number:
-4000004938320895
-Your card PIN:
-6826
-
-1. Create an account
-2. Log into account
-0. Exit
->2
-
-Enter your card number:
->4000004938320895
-Enter your PIN:
->4444
-
-Wrong card number or PIN!
-
-1. Create an account
-2. Log into account
-0. Exit
->2
-
-Enter your card number:
->4000004938320895
-Enter your PIN:
->6826
-
-You have successfully logged in!
-
-1. Balance
-2. Log out
-0. Exit
->1
-
-Balance: 0
-
-1. Balance
-2. Log out
-0. Exit
->2
-
-You have successfully logged out!
-
-1. Create an account
-2. Log into account
-0. Exit
->0
-
-Bye!
-```
+marvinalexz@gmail.com
