@@ -16,6 +16,7 @@ class BaseStorageHandler:
 
 
 class DictionaryStorageHandler(BaseStorageHandler):
+    """Stores credit cards in a dictionary."""
     def __init__(self, storage: dict = None):
         self.storage = storage if storage is not None else {}
 
@@ -33,6 +34,7 @@ class DictionaryStorageHandler(BaseStorageHandler):
 
 
 class SQLiteStorageHandler(BaseStorageHandler):
+    """Stores credit cards in a sqlite database."""
     db_name = 'card.s3db'
     table_name = 'card'
     field_number = 'number'

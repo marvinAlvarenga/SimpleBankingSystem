@@ -1,9 +1,12 @@
 from .storages import SQLiteStorageHandler
+# from .storages import DictionaryStorageHandler
 
 
 class CreditCard:
+    """Represent a credit card. It uses a storage."""
 
     storage_handler = SQLiteStorageHandler()
+    # storage_handler = DictionaryStorageHandler()
 
     def __init__(self, number, pin, balance=0):
         self.number = number

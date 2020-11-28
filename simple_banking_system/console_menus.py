@@ -1,3 +1,7 @@
+"""
+This module handle all the user interaction through
+different menus.
+"""
 from .banking import auth
 from .banking.factories import CreditCardBuilder
 from .banking.models import CreditCard
@@ -5,7 +9,9 @@ from .banking.validators import LuhnCardValidator
 
 
 class BaseMenu:
+    """Base interface to make a menu."""
     def next(self):
+        """Return the next menu instance."""
         raise NotImplementedError
 
 

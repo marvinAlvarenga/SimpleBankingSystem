@@ -1,3 +1,7 @@
+"""
+Represents a basic authentication system
+storing a global CreditCard object.
+"""
 LOGGED_IN_ACCOUNT = None
 
 

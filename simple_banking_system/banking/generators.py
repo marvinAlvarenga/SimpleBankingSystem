@@ -1,3 +1,9 @@
+"""
+Generates pins, credit card numbers.
+
+Add these generatos to factories in order to
+generate a new credit card instance.
+"""
 import random
 
 from .constants import get_bank_identifier

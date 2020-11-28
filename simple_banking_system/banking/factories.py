@@ -1,3 +1,9 @@
+"""
+Factories to generate a new CreditCard instance
+using Random strategy or Luhn Algorithm.
+
+Please, use the builder.
+"""
 from .models import CreditCard
 from .generators import (
     LuhnAlgorithmCardNumberGenerator,
@@ -29,6 +35,7 @@ class LuhnAlgorithmCreditCardFactory(BaseCreditCardFactory):
 
 # Generate a new credic card usign a factory
 class CreditCardBuilder:
+    # Factory to use to generate a new credit card
     factory = LuhnAlgorithmCreditCardFactory()
 
     def get_new_credit_card(self):
