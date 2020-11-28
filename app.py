@@ -35,6 +35,12 @@ class DictionaryStorageHandler(BaseStorageHandler):
     def save(self, credit_card):
         self.storage[credit_card.number] = credit_card
 
+    def update(self, credit_card):
+        pass
+
+    def delete(self, credit_card):
+        del self.storage[credit_card.number]
+
     def get_by_card_number(self, card_number):
         return self.storage.get(card_number, None)
 
