@@ -40,29 +40,46 @@ class DictionaryStorageHandler(BaseStorageHandler):
 
 
 class SQLiteStorageHandler(BaseStorageHandler):
+    db_name = 'card.s3db'
+    table_name = 'card'
+    field_number = 'number'
+    field_pin = 'pin'
+    field_balance = 'balance'
+
     def __init__(self):
-        self.connection = sqlite3.connect('card.s3db')
+        self.connection = sqlite3.connect(self.db_name)
         self.cursor = self.connection.cursor()
         query = """
         CREATE TABLE IF NOT EXISTS card(
-            id      INTEGER,
-            number  TEXT,
-            pin     TEXT,
-            balance INTEGER DEFAULT 0
+            number  VARCHAR(16),
+            pin     CHAR(4),
+            balance DECIMAL(8,2) DEFAULT 0.0
         );
         """
         self.cursor.execute(query)
         self.connection.commit()
 
     def save(self, credit_card):
-        query = (f'INSERT INTO card'
-                 f' VALUES ({credit_card.id}, "{credit_card.number}", "{credit_card.pin}", {credit_card.balance});')
+        query = (f'INSERT INTO {self.table_name}'
+                 f' VALUES ("{credit_card.number}", "{credit_card.pin}", {credit_card.balance});')
 
         self.cursor.execute(query)
         self.connection.commit()
 
+    def update(self, credit_card):
+        query = (f'UPDATE {self.table_name} '
+                 f'SET {self.field_balance}={credit_card.balance} '
+                 f'WHERE {self.field_number}="{credit_card.number}";')
+        self.cursor.execute(query)
+        self.connection.commit()
+
+    def delete(self, credit_card):
+        query = f'DELETE FROM {self.table_name} WHERE {self.field_number}="{credit_card.number}";'
+        self.cursor.execute(query)
+        self.connection.commit()
+
     def get_by_card_number(self, card_number):
-        query = f'SELECT * FROM card WHERE number="{card_number}";'
+        query = f'SELECT * FROM {self.table_name} WHERE {self.field_number}="{card_number}";'
         self.cursor.execute(query)
         row = self.cursor.fetchone()
 
@@ -74,8 +91,7 @@ class CreditCard:
 
     storage_handler = SQLiteStorageHandler()
 
-    def __init__(self, id, number, pin, balance=0):
-        self.id = id
+    def __init__(self, number, pin, balance=0):
         self.number = number
         self.pin = pin
         self.balance = balance
@@ -86,6 +102,42 @@ class CreditCard:
 
     def save(self):
         return self.storage_handler.save(self)
+
+    def update(self):
+        return self.storage_handler.update(self)
+
+    def delete(self):
+        return self.storage_handler.delete(self)
+
+
+# Algorithms
+class LuhnAlgorithm:
+    @staticmethod
+    def get_luhn_sum(card_number):
+        digits = [int(digit) for digit in card_number[:-1]]
+
+        for i in range(len(digits)):
+            if (i+1) % 2 != 0:
+                digits[i] *= 2
+
+            if digits[i] > 9:
+                digits[i] -= 9
+
+        return sum(digits)
+
+
+# Card number validators
+class BaseCardValidator:
+    def is_valid(self, number_card):
+        raise NotImplementedError
+
+
+class LuhnCardValidator(BaseCardValidator):
+    @staticmethod
+    def is_valid(number_card):
+        luhn_sum = LuhnAlgorithm.get_luhn_sum(number_card)
+        checksum = int(number_card[-1])
+        return (luhn_sum + checksum) % 10 == 0
 
 
 # Generators
@@ -110,18 +162,10 @@ class RandomCardNumberGenerator(BaseGenerator):
 class LuhnAlgorithmCardNumberGenerator(BaseGenerator):
     def generate(self):
         random_identifier = f'{get_bank_identifier()}{random.randint(0, 999999999):09}'
-        digits = [int(digit) for digit in random_identifier]
 
-        for i in range(len(digits)):
-            if (i+1) % 2 != 0:
-                digits[i] *= 2
-
-            if digits[i] > 9:
-                digits[i] -= 9
-
-        x = sum(digits)
-
-        rest = x % 10
+        # Send the generated card number with a generic checksum
+        luhn_sum = LuhnAlgorithm.get_luhn_sum(random_identifier + '0')
+        rest = luhn_sum % 10
         checksum = 0 if rest == 0 else 10 - rest
 
         return random_identifier + str(checksum)
@@ -134,7 +178,6 @@ class BaseCreditCardFactory:
 
     def generate_new_credit_card(self):
         return CreditCard(
-            id=1,
             number=self.card_number_generator.generate(),
             pin=self.pin_number_generator.generate(),
         )
@@ -211,7 +254,10 @@ class LogIntoAccountMenu(BaseMenu):
 class UserLoggedInMenu(BaseMenu):
     def next(self):
         print('1. Balance')
-        print('2. Log out')
+        print('2. Add income')
+        print('3. Do transfer')
+        print('4. Close account')
+        print('5. Log out')
         print('0. Exit')
         option = input()
 
@@ -220,6 +266,12 @@ class UserLoggedInMenu(BaseMenu):
         elif option == '1':
             return BalanceMenu()
         elif option == '2':
+            return IncomeMenu()
+        elif option == '3':
+            return TransferMenu()
+        elif option == '4':
+            return CloseAccountMenu()
+        elif option == '5':
             set_logged_in_account(None)
             print('You have successfully logged out!')
             return MainMenu()
@@ -232,6 +284,54 @@ class BalanceMenu(BaseMenu):
         card = get_logged_in_account()
         print(f'Balance: {card.balance}')
         return UserLoggedInMenu()
+
+
+class IncomeMenu(BaseMenu):
+    def next(self):
+        print('Enter income:')
+        income = int(input())
+        card = get_logged_in_account()
+        card.balance += income
+        card.update()
+        print('Income was added!')
+        return UserLoggedInMenu()
+
+
+class TransferMenu(BaseMenu):
+    def next(self):
+        print('Enter card number:')
+        card_number = input()
+        if not LuhnCardValidator.is_valid(card_number):
+            print('Probably you made a mistake in the card number. Please try again!')
+            return UserLoggedInMenu()
+
+        destination_card = CreditCard.get_by_card_number(card_number)
+        if not destination_card:
+            print('Such a card does not exist.')
+            return UserLoggedInMenu()
+
+        print('Enter how much money you want to transfer:')
+        amount = int(input())
+        my_card = get_logged_in_account()
+        if amount > my_card.balance:
+            print('Not enough money!')
+            return UserLoggedInMenu()
+
+        my_card.balance -= amount
+        destination_card.balance += amount
+        my_card.update()
+        destination_card.update()
+        print('Success!')
+        return UserLoggedInMenu()
+
+
+class CloseAccountMenu(BaseMenu):
+    def next(self):
+        card = get_logged_in_account()
+        card.delete()
+        set_logged_in_account(None)
+        print('The account has been closed!')
+        return MainMenu()
 
 
 # Entry point
