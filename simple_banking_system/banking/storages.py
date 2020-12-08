@@ -12,6 +12,7 @@ class BaseStorageHandler:
         raise NotImplementedError
 
     def get_by_card_number(self, credit_card):
+        """Return data for unpacking."""
         raise NotImplementedError
 
 
@@ -30,7 +31,14 @@ class DictionaryStorageHandler(BaseStorageHandler):
         del self.storage[credit_card.number]
 
     def get_by_card_number(self, card_number):
-        return self.storage.get(card_number, None)
+        credit_card = self.storage.get(card_number, None)
+
+        # Transfor data for unpacking
+        return {
+            'number': credit_card.number,
+            'pin': credit_card.pin,
+            'balance': credit_card.balance,
+        }
 
 
 class SQLiteStorageHandler(BaseStorageHandler):
@@ -76,10 +84,13 @@ class SQLiteStorageHandler(BaseStorageHandler):
         self.connection.commit()
 
     def get_by_card_number(self, card_number):
-        from .models import CreditCard
         query = (f'SELECT * FROM {self.table_name} '
                  f'WHERE {self.field_number}="{card_number}";')
         self.cursor.execute(query)
-        row = self.cursor.fetchone()
+        row = self.cursor.fetchone()  # Returns a tuple
 
-        return CreditCard(*row) if row else None
+        return {
+            'number': row[0],
+            'pin': row[1],
+            'balance': row[2],
+        } if row else None

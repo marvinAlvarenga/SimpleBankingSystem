@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="simple-banking-system",
-    version="1.0.0",
+    version="1.0.1",
     author="Marvin Alvarenga",
     author_email="marvinalexz@gmail.com",
     description="A simple use of design patterns",

@@ -15,7 +15,8 @@ class CreditCard:
 
     @classmethod
     def get_by_card_number(cls, card_number):
-        return cls.storage_handler.get_by_card_number(card_number)
+        data = cls.storage_handler.get_by_card_number(card_number)
+        return cls(**data) if data else None
 
     def save(self):
         return self.storage_handler.save(self)
